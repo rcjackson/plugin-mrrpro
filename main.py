@@ -8,6 +8,7 @@ from waggle.plugin import Plugin
 mrr_ip_address = '10.31.81.113'
 mrr_user_name = 'mrruser'
 mrr_password = 'metek'
+vsn = "W08D"
 
 def recursive_list(sftp):
     """
@@ -50,13 +51,13 @@ def main():
         for fi in file_list:
             base, name = os.path.split(fi)
             if not name in df.value:
-                if name[-3] == 'log':
+                if name[-3:] == 'log':
                     dt = datetime.datetime.strptime(name, '%Y%m%d.log')
                 else:
                     dt = datetime.datetime.strptime(name, '%Y%m%d_%H%M%S.nc')
                 timestamp = int(datetime.datetime.timestamp(dt) * 1e9)
                 logging.debug("Downloading %s" % fi)
-                sftp.get(fi, '/app/')
+                sftp.get(fi, '/app/%s' % name)
                 logging.debug("Uploading %s to beehive" % fi)
                 plugin.upload_file(os.path.join('/app/', name), timestamp=timestamp)
                 os.remove(os.path.join('/app/', name))
