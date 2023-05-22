@@ -37,7 +37,8 @@ def recursive_list(sftp):
 def main():
     with Plugin() as plugin:
         t = paramiko.Transport((mrr_ip_address, 22))
-        sftp = paramiko.SFTPClient.from_transport(t)
+        channel = t.open_session()
+        sftp = t.open_sftp_client()
         sftp.chdir('/u/data')
         file_list = recursive_list(sftp)
         df = sage_data_client.query(
