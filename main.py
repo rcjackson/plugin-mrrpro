@@ -37,7 +37,7 @@ def recursive_list(sftp):
 def main():
     with Plugin() as plugin:
         t = paramiko.Transport((mrr_ip_address, 22))
-        channel = t.open_session()
+        channel = t.connect(username=mrr_user_name, password=mrr_password)
         sftp = t.open_sftp_client()
         sftp.chdir('/u/data')
         file_list = recursive_list(sftp)
