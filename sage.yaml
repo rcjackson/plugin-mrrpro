@@ -1,0 +1,13 @@
+name: "mrr"
+version: "0.1.0"
+description: "Plugin for transfer and processing Micro Rain Radar Pro data"
+keywords: ""
+authors: "Bobby Jackson"
+collaborators: ""
+funding: "U.S. Department of Energy"
+license: ""
+homepage: ""
+source:
+  architectures:
+    - "linux/amd64"
+    - "linux/arm64"
