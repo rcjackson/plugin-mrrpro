@@ -31,8 +31,8 @@ def recursive_list(sftp):
         for ymd in ymds:
             files = sftp.listdir('/u/data/%s/%s' % (ym, ymd))
             for fi in files:
-                file_list.append('/u/data/%s/%s/%s' % (ym, ymd, di))
-                
+                file_list.append('/u/data/%s/%s/%s' % (ym, ymd, fi))
+
     return file_list
 
 
