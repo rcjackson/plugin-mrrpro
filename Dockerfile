@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM waggle/plugin-base:1.1.1-base
 
 WORKDIR /app
 

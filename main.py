@@ -3,6 +3,8 @@ import datetime
 import os
 import logging
 import sage_data_client
+import argparse
+
 from waggle.plugin import Plugin
 
 mrr_ip_address = '10.31.81.113'
@@ -28,40 +30,41 @@ def recursive_list(sftp):
     file_list = []
     year_months = sftp.listdir()
     for ym in year_months:
-        ymds = sftp.listdir('/u/data/%s' % ym)
+        ymds = sftp.listdir('/u/data/%s/' % ym)
         for ymd in ymds:
-            files = sftp.listdir('/u/data/%s/%s' % (ym, ymd))
+            files = sftp.listdir('/u/data/%s/%s/' % (ym, ymd))
             for fi in files:
-                file_list.append('/u/data/%s/%s/%s' % (ym, ymd, fi))
+                if '.nc' in fi:
+                    file_list.append('/u/data/%s/%s/%s' % (ym, ymd, fi))
 
     return file_list
 
 
-def main():
+def main(args):
+    num_files = int(args.num_files)
+    
     with Plugin() as plugin:
         t = paramiko.Transport((mrr_ip_address, 22))
         channel = t.connect(username=mrr_user_name, password=mrr_password)
         sftp = t.open_sftp_client()
         sftp.chdir('/u/data')
         file_list = recursive_list(sftp)
-        df = sage_data_client.query(
-            start="-7d",
-            filter={"name": "upload"},
-            vsn=vsn).set_index("timestamp")
-        for fi in file_list:
+        for fi in file_list[-num_files:]:
+            print(fi)
             base, name = os.path.split(fi)
-            if not name in df.value:
-                if name[-3:] == 'log':
-                    dt = datetime.datetime.strptime(name, '%Y%m%d.log')
-                else:
-                    dt = datetime.datetime.strptime(name, '%Y%m%d_%H%M%S.nc')
-                timestamp = int(datetime.datetime.timestamp(dt) * 1e9)
-                logging.debug("Downloading %s" % fi)
-                sftp.get(fi, '/app/%s' % name)
-                logging.debug("Uploading %s to beehive" % fi)
-                plugin.upload_file(os.path.join('/app/', name), timestamp=timestamp)
-                os.remove(os.path.join('/app/', name))
+            dt = datetime.datetime.strptime(name, '%Y%m%d_%H%M%S.nc')
+            timestamp = int(datetime.datetime.timestamp(dt) * 1e9)
+            logging.debug("Downloading %s" % fi)
+            sftp.get(fi, localpath=name)
+            logging.debug("Uploading %s to beehive" % fi)
+            plugin.upload_file(name)
                 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+            prog='mrrpro-plugin',
+            description='Plugin to transfer MRR-PRO data')
+    parser.add_argument('-n', '--num-files', default=1,
+            help='number of files to transfer (0 to transfer all data)')
+    args = parser.parse_args()
+    main(args)
