@@ -52,10 +52,9 @@ def main(args):
         file_list = recursive_list(sftp)
         # Make sure we have a complete file from the MRR and continue when we do when in
         # pull one file mode
-        if num_files == 1:
-            while file_list[-1][0] == ".":
-                file_list = recursive_list(sftp)
-
+        for f in file_list:
+            if f[0] == ".":
+                file_list.remove(f)
         # If we're pulling every file, then load database to make sure we are not uploading duplicates
         file_names = []
         if num_files > 1:
