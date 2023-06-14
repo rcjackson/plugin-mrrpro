@@ -48,11 +48,38 @@ def main(args):
         channel = t.connect(username=mrr_user_name, password=mrr_password)
         sftp = t.open_sftp_client()
         sftp.chdir('/u/data')
+        
         file_list = recursive_list(sftp)
+        # Make sure we have a complete file from the MRR and continue when we do when in
+        # pull one file mode
+        if num_files == 1:
+            while file_list[-1][0] == ".":
+                file_list = recursive_list(sftp)
+
+        # If we're pulling every file, then load database to make sure we are not uploading duplicates
+        file_names = []
+        if num_files > 1:
+            print("Accessing beehive...")
+            df = sage_data_client.query(
+                start="-%dh" % num_files,
+                filter={"name": "upload", "vsn": "W08D",
+                     "plugin": "registry.sagecontinuum.org/rjackson/mrrpro:0.1.1"}).set_index("timestamp")
+            file_names = df['meta.filename'].values
         for fi in file_list[-num_files:]:
             print(fi)
             base, name = os.path.split(fi)
-            dt = datetime.datetime.strptime(name, '%Y%m%d_%H%M%S.nc')
+            try:
+                dt = datetime.datetime.strptime(name, '%Y%m%d_%H%M%S.nc')
+            except ValueError:
+                # File incomplete, skip. Should not happen in one-file mode.
+                continue
+                
+            if not int(args.hour) == -1:
+                if not int(dt.hour) == int(args.hour):
+                    continue
+            if name in file_names:
+                print('%s already on beehive, skipping!' % name)
+                continue
             timestamp = int(datetime.datetime.timestamp(dt) * 1e9)
             logging.debug("Downloading %s" % fi)
             sftp.get(fi, localpath=name)
@@ -66,5 +93,7 @@ if __name__ == "__main__":
             description='Plugin to transfer MRR-PRO data')
     parser.add_argument('-n', '--num-files', default=1,
             help='number of files to transfer (0 to transfer all data)')
+    parser.add_argument('-hr', '--hour', default=-1,
+            help='Hour of the day to transfer (-1 for all hours)')
     args = parser.parse_args()
     main(args)
