@@ -1,5 +1,5 @@
 name: "mrrpro"
-version: "0.1.0"
+version: "0.1.1"
 description: "Plugin for transferring and processing Micro Rain Radar Pro data"
 keywords: "radar, rain"
 authors: "Bobby Jackson"

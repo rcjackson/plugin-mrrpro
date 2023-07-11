@@ -37,7 +37,7 @@ def recursive_list(sftp):
                 if '.nc' in fi:
                     file_list.append('/u/data/%s/%s/%s' % (ym, ymd, fi))
 
-    return file_list
+    return sorted(file_list)
 
 
 def main(args):
